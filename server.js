@@ -10,6 +10,7 @@ dotenv.config();
 const app = express();
 const server = createServer(app);
 const io = new Server(server);
+const allUsers = {};
 
 const port = process.env.PORT;
 
@@ -33,5 +34,12 @@ app.get("/", (req, res) => {
 // Socket connection 
 io.on("connection" , (socket)=>{
     console.log(`Someone joined the socket and thier id is  ${socket.id}`);
+    socket.on("join-user" , username=>{
+      console.log(`${username} joined the socket connection with ${socket.id} id`)
+      // Updating Global users with all existing users
+      allUsers[username] = {username , id : socket.id};
+
+      io.emit("joined" , allUsers);
+    })
 })
 
