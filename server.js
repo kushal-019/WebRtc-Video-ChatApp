@@ -20,15 +20,17 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 // exposing public folder to outside world
 app.use(express.static("public"));
 
-// Assigning port to use 
-server.listen(port, () => {
-  console.log(`Server listening on port ${port}`);
-});
-
 // Handling get request for http
 app.get("/", (req, res) => {
     res.sendFile(join(__dirname, "app", "index.html"));
   });
+
+
+  
+// Assigning port to use 
+server.listen(port, () => {
+  console.log(`Server listening on port ${port}`);
+});
 
 
 // Socket connection 
@@ -41,5 +43,20 @@ io.on("connection" , (socket)=>{
 
       io.emit("joined" , allUsers);
     })
-})
-
+    
+    socket.on("offer" , ({from  , to , offer})=>{
+      io.to(allUsers[to].id).emit("offer" , {from  , to , offer});
+    })
+    socket.on("answer" , ({from  ,to , answer} )=>{
+      io.to(allUsers[from].id).emit("answer" , {from  , to , answer});
+    })
+    
+    socket.on("ICECandidate" , (candidate)=>{
+      
+      //Send candidate to "to / remote " user
+      // socket.broadcast.emit("ICECandidate" , candidate);
+      io.to(allUsers[to].id).emit("ICECandidate", candidate);
+      
+    });
+    
+});

@@ -24,10 +24,22 @@ const peerConnection=(function(){
         // creates a ICE Candidate or public ip address
         peerConnection = new RTCPeerConnection(config);
 
-        // add local strings to peer connnections
+        // add local stream to peer connnections
+        localStream.getTracks().forEach(track=>{
+            peerConnection.addTrack(track , localStream);
+        })
         // listen to remote stream and add to peer connection
+        peerConnection.onTrack = function(event){
+            remoteVideo.srcObject = event.streams[0];
+        };
         // listen to ICE candidate
+        peerConnection.onicecandidate = function(e){
+            if(e.candidate){
+                
+            }
+        }
 
+        return peerConnection;
     }
 
     return {
@@ -85,10 +97,28 @@ socket.on("joined" , allUsers=>{
     allUserContainer();
 })
 
+socket.on("offer" ,async({from , to,offer})=>{
+    const pc = peerConnection.getInstance();
+
+    // set remote description;
+
+    await pc.setRemoteDescription(offer);
+    const answer = await pc.createAnswer();
+    await pc.setLocalDescription(answer);
+    socket.emit(("answer" , {from , to,  answer : pc.localDescription}));
+})
+
+
 
 // Start Call method
-const startCall=(user)=>{
+const startCall=async(user)=>{
     console.log(user);
+    const pc = peerConnection.getInstance();
+    const offer = await pc.createOffer();
+    console.log({offer})
+    await pc.setLocalDescription(offer);
+
+    socket.emit("offer" ,{from : username.value , to : user , offer :  pc.localDescription  });
 }
 
 
