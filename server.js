@@ -48,11 +48,22 @@ io.on("connection", (socket) => {
     io.to(allUsers[to].id).emit("offer", { from, to, offer });
   });
 
+  socket.on("end-call", ({ from, to }) => {
+    io.to(allUsers[to].id).emit("end-call", { from, to });
+  });
+
+  socket.on("call-ended", (caller) => {
+    const [from, to] = caller;
+    io.to(allUsers[from].id).emit("call-ended", caller);
+    io.to(allUsers[to].id).emit("call-ended", caller);
+  });
+
   socket.on("answer", ({ from, to, answer }) => {
-    console.log("answerEmited");
-    console.log(allUsers[from].id);
-    console.log(allUsers[to].id);
-    io.to(allUsers[from].id).emit("answer", { from, to, answer });
+    try {
+      io.to(allUsers[to].id).emit("answer", { from, to, answer });
+    } catch (error) {
+      console.error("Error in answer handler:", error);
+    }
   });
 
   socket.on("ICECandidate", ({ from, to, candidate }) => {
